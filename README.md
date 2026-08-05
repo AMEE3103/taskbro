@@ -1,61 +1,51 @@
 # Productivity Bot
 
-A Telegram bot that turns anything you send it into a structured entry
-(Task / Note / Habit), stores it in MongoDB, and reminds you on your phone
-at the right time.
+A Telegram bot that turns anything you send it into a structured entry —
+a Task, a Note, a Habit, or an Event — stores it in a database, and
+reminds you on your phone at the right time. It also supports recurring
+weekly items like classes or gym sessions.
 
-## Setup
+## What it does
 
-1. **Create the bot**: open Telegram, message `@BotFather`, send `/newbot`,
-   follow the prompts. It gives you a token like `123456:ABC-DEF...`.
-2. **Get a MongoDB database** — easiest is a free cluster on
-   [MongoDB Atlas](https://www.mongodb.com/cloud/atlas): create a free (M0)
-   cluster, add a database user, allow network access from your IP (or
-   `0.0.0.0/0` for simplicity), and copy the connection string — it looks
-   like `mongodb+srv://user:password@cluster.mongodb.net`.
-   (Alternatively, run `mongod` locally and use `mongodb://localhost:27017`.)
-3. **Install dependencies**:
-   ```
-   pip install -r requirements.txt
-   ```
-4. **Set your config** — env vars:
-   ```
-   export BOT_TOKEN="123456:ABC-DEF..."
-   export MONGODB_URI="mongodb+srv://user:password@cluster.mongodb.net"
-   ```
-   (or paste them into the constants near the top of `bot.py`)
-5. **Run it**:
-   ```
-   python bot.py
-   ```
-6. On Telegram, search for your bot's username and send `/start`.
+Text it naturally, and if it can find a date or deadline in your message,
+it saves that as a Task automatically and reminds you as the deadline
+approaches — a few days out, the day before, and on the day itself, each
+time with a slightly different message so it doesn't feel repetitive.
 
-## Using it
+If there's no date in what you sent, it asks whether to file it as a
+Task, a Note, a Habit, or an Event, and then asks what time to remind you.
 
-- **Text it naturally** — e.g. `assignment 10 aug deadline`, `submit report tomorrow 6pm`.
-  If it finds a date, it auto-saves a **Task** with that deadline and sets a
-  reminder (9:00 AM on the due date by default, or the exact time if you gave one).
-- If no date is found, it asks whether to file the message as a **Task**, **Note**,
-  or **Habit**, then asks for a reminder time (`HH:MM`, 24h) or `skip`.
-  - Task reminders fire once. Habit reminders repeat every day at that time.
-- `/today` — everything with a reminder due today, in order.
-- `/list` — all pending entries (tasks, notes, habits together).
-- `/tasks` or just texting **"tasks"** — pending tasks only, with added date and deadline.
-- `/donetasks` or texting **"done tasks"** — completed tasks, same format.
-- `/done <id>` — mark a task finished and cancel its reminder.
+For things that repeat every week — a class, a gym session, a standing
+commitment — there's a separate flow where you name the item, pick which
+days of the week it happens on, and give it a time. It will then remind
+you on each of those days going forward.
+
+You can also ask it what's pending, what's already done, and what's
+happening today, at any time.
+
+## What you need to set it up
+
+- A Telegram bot token, obtained by messaging Telegram's official BotFather
+  account and following its prompts to create a new bot.
+- A database to store entries in — a small always-free cloud database
+  works well, or a locally running one if you prefer.
+- Python installed, along with the handful of libraries the project
+  depends on (listed in the project's requirements file).
+- A place to actually run it continuously, since it can only send
+  reminders while it's running. This can be your own computer while
+  you're using it, or a small always-on machine or free hosting service
+  once you want it running full-time.
 
 ## Keeping it running
 
-The bot only sends notifications while `bot.py` is running. For it to remind
-you reliably, run it somewhere that stays on:
-- A small always-on machine (Raspberry Pi, old laptop), or
-- A free-tier host like Railway or Render (run `python bot.py` as a worker
-  process — no web server needed; MongoDB Atlas is remote, so this works
-  fine even though the host's filesystem isn't persistent), or
-- Just leave it running on your PC while you're using it.
+Reminders are only sent while the bot process is active. For casual use,
+running it on your computer while you're working is enough. For it to
+reliably remind you day to day, it needs to run somewhere that stays on,
+such as a low-power home device or a free tier of a hosting service.
 
-## Data
+## Data stored
 
-Two MongoDB collections are used, created automatically on first run:
-- `entries` — every Task/Note/Habit you've saved.
-- `counters` — a single document that hands out sequential `#id` numbers.
+The bot keeps two collections of records: one holding every item you've
+saved (tasks, notes, habits, events, and recurring schedule entries), and
+a small internal one used only to hand out sequential ID numbers so you
+can reference and mark items done easily.
